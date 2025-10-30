@@ -90,7 +90,6 @@ const Layout = () => {
 
       {/* Footer */}
       <footer className="text-center py-4 border-top">
-        © Amal, Dina, James, Joey
       </footer>
     </div>
   );
