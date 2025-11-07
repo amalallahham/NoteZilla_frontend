@@ -46,7 +46,7 @@ const UploaderWrapper: React.FC = () => {
 
     try {
       console.log(token ? { Authorization: `Bearer ${token}` } : {})
-      const response = await fetch(`${import.meta.env.VITE_API_URL}videos/upload`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/videos/upload`, {
         method: "POST",
         body: formData,
         headers: token ? { Authorization: `Bearer ${token}` } : {}, 
