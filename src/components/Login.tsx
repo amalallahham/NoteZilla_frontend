@@ -1,6 +1,12 @@
+// User login component with client-side validation
+// AI Assistant: Form validation and authentication flow generated with assistance from GitHub Copilot
+
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+
+// Email validation regex - RFC 5322 compliant
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -10,19 +16,32 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const validateEmail = (email: string): boolean => {
+    return EMAIL_REGEX.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    // Client-side validation
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      setLoading(false);
+      return;
+    }
+
     console.log("Submitting login for:", import.meta.env.VITE_API_URL);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
+        `${import.meta.env.VITE_API_URL}/api/v1/auth/login`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: 'include',
           body: JSON.stringify({ email, password }),
         }
       );
@@ -39,7 +58,7 @@ const Login: React.FC = () => {
 
       navigate("/");
     } catch (err: any) {
-      setError(err.error || err.message ||"Something went wrong");
+      setError(err.error || err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }

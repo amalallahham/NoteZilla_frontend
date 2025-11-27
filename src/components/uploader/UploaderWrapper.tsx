@@ -6,7 +6,7 @@ import FileUploader from "./Uploader";
 import thinking from "../../assets/images/thinking.png";
 
 import "../../assets/styles/uploader.css";
-import { useAuth } from "../../context/AuthContext"; 
+import { useAuth } from "../../context/AuthContext";
 
 type FileType = "video" | "audio" | null;
 
@@ -18,7 +18,7 @@ const UploaderWrapper: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [step, setStep] = useState<"uploading" | "summarizing">("uploading");
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { token } = useAuth(); 
+  const { token } = useAuth();
 
   useEffect(() => {
     if (loading) {
@@ -45,24 +45,25 @@ const UploaderWrapper: React.FC = () => {
     formData.append("file", file);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/videos/upload`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/videos/upload`, {
         method: "POST",
         body: formData,
-        headers: token ? { Authorization: `Bearer ${token}` } : {}, 
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error("Upload failed");
 
       const json = await response.json();
       console.log("Upload success:", json);
-      setData(json.data); 
+      setData(json.data);
       console.log("Received data:", json.data);
-  
+
       setLoading(false);
 
     } catch (error) {
       console.error("Upload error:", error);
-      setLoading(false); 
+      setLoading(false);
     }
   };
 

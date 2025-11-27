@@ -8,6 +8,7 @@ import Summery from "./components/uploader/Summery";
 import UploaderWrapper from "./components/uploader/UploaderWrapper";
 import SummeryList from "./components/summary/summaryList";
 import AdminDashboard from "./components/AdminDashboard";
+import UserProfile from "./components/UserProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SummaryDetails from "./components/summary/summaryDetails";
 
@@ -19,6 +20,14 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<UploaderWrapper />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/summery"
             element={

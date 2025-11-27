@@ -33,10 +33,11 @@ const SummaryDetails: React.FC = () => {
   useEffect(() => {
     if (!token || !id) return;
 
-    fetch(`${import.meta.env.VITE_API_URL}/videos/summary/${id}`, {
+    fetch(`${import.meta.env.VITE_API_URL}/api/v1/videos/summary/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      credentials: 'include',
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch summary");

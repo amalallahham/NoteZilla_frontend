@@ -1,3 +1,6 @@
+// Admin dashboard component displaying user stats and endpoint usage
+// AI Assistant: Statistics tables and data fetching logic generated with assistance from GitHub Copilot
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,14 +14,28 @@ interface User {
   createdAt: string;
 }
 
+interface EndpointStat {
+  method: string;
+  endpoint: string;
+  count: number;
+  lastCalled: string;
+}
+
 interface AdminData {
   users: User[];
   totalUsers: number;
   totalApiCalls: number;
 }
 
+interface StatsData {
+  stats: EndpointStat[];
+  totalEndpoints: number;
+  totalRequests: number;
+}
+
 const AdminDashboard: React.FC = () => {
   const [adminData, setAdminData] = useState<AdminData | null>(null);
+  const [statsData, setStatsData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { token, user } = useAuth();
@@ -31,15 +48,17 @@ const AdminDashboard: React.FC = () => {
     }
 
     fetchAdminData();
+    fetchStatsData();
   }, [user, token]);
 
   const fetchAdminData = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/users`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -50,6 +69,27 @@ const AdminDashboard: React.FC = () => {
       setAdminData(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load admin data');
+    }
+  };
+
+  const fetchStatsData = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch stats data');
+      }
+
+      const data = await response.json();
+      setStatsData(data);
+    } catch (err: any) {
+      console.error('Stats fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -103,10 +143,10 @@ const AdminDashboard: React.FC = () => {
       <div className="row">
         <div className="col-12">
           <h2 className="mb-4 text-white">Admin Dashboard</h2>
-          
+
           {/* Summary Cards */}
           <div className="row mb-4">
-            <div className="col-md-6">
+            <div className="col-md-3">
               <div className="card primary-bck text-white shadow-sm rounded-5">
                 <div className="card-body">
                   <h5 className="card-title">Total Users</h5>
@@ -114,11 +154,27 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="col-md-6">
+            <div className="col-md-3">
               <div className="card primary-bck text-white shadow-sm rounded-5">
                 <div className="card-body">
                   <h5 className="card-title">Total API Calls</h5>
                   <h3 className="card-text">{adminData.totalApiCalls}</h3>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-3">
+              <div className="card primary-bck text-white shadow-sm rounded-5">
+                <div className="card-body">
+                  <h5 className="card-title">Total Endpoints</h5>
+                  <h3 className="card-text">{statsData?.totalEndpoints || 0}</h3>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-3">
+              <div className="card primary-bck text-white shadow-sm rounded-5">
+                <div className="card-body">
+                  <h5 className="card-title">Total Requests</h5>
+                  <h3 className="card-text">{statsData?.totalRequests || 0}</h3>
                 </div>
               </div>
             </div>
@@ -168,6 +224,55 @@ const AdminDashboard: React.FC = () => {
               {adminData.users.length === 0 && (
                 <div className="text-center text-white py-4">
                   No users found
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Endpoint Statistics Table */}
+          <div className="card primary-bck text-white shadow-sm rounded-5 mt-4">
+            <div className="card-header">
+              <h5 className="mb-0 text-white">Endpoint Statistics</h5>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-dark table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Endpoint</th>
+                      <th>Request Count</th>
+                      <th>Last Called</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {statsData?.stats.map((stat, index) => (
+                      <tr key={index}>
+                        <td>
+                          <span className={`badge ${stat.method === 'GET' ? 'bg-success' :
+                              stat.method === 'POST' ? 'bg-primary' :
+                                stat.method === 'PUT' ? 'bg-warning' :
+                                  stat.method === 'DELETE' ? 'bg-danger' : 'bg-secondary'
+                            }`}>
+                            {stat.method}
+                          </span>
+                        </td>
+                        <td><code>{stat.endpoint}</code></td>
+                        <td>
+                          <span className="badge bg-info">
+                            {stat.count}
+                          </span>
+                        </td>
+                        <td>{formatDate(stat.lastCalled)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {(!statsData || statsData.stats.length === 0) && (
+                <div className="text-center text-white py-4">
+                  No endpoint statistics available
                 </div>
               )}
             </div>
