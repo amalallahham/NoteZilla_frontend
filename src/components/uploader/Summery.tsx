@@ -1,6 +1,17 @@
 import { useState } from "react";
 import "../../assets/styles/summery.css";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+
+type TranscriptSection = {
+  heading: string;
+  points: string[];
+};
+
+type TranscriptSummaryObject = {
+  title?: string;
+  sections?: TranscriptSection[];
+};
 
 type SummeryProps = {
   data: {
@@ -12,7 +23,7 @@ type SummeryProps = {
     transcriptLength?: number;
     apiCalls?: number;
     remainingCalls?: number;
-    transcriptSummary?: string | Record<string, any>; // <- added summary support
+    transcriptSummary?: string | TranscriptSummaryObject;
   };
 };
 
@@ -23,11 +34,46 @@ const Summery = ({ data }: SummeryProps) => {
   const [openSummary, setOpenSummary] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editableTitle, setEditableTitle] = useState(data.title || "");
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const { token } = useAuth();
 
-  const handleSaveTitle = () => {
-    // for now this only updates local state (display)
-    // later you can call an API here to save it to the backend
-    setIsEditingTitle(false);
+  const summaryObject =
+    typeof data.transcriptSummary === "object" &&
+    data.transcriptSummary !== null
+      ? (data.transcriptSummary as TranscriptSummaryObject)
+      : null;
+
+  const handleSaveTitle = async () => {
+    if (!data.id) {
+      return;
+    }
+
+    try {
+      setIsSavingTitle(true);
+      setSaveError(null);
+
+      const response = await fetch(`/api/summaries/${data.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: editableTitle }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update title");
+      }
+
+
+      setIsEditingTitle(false);
+    } catch (err: any) {
+      console.error(err);
+      setSaveError("Could not save title. Please try again.");
+    } finally {
+      setIsSavingTitle(false);
+    }
   };
 
   console.log("Summary data:", data.transcriptSummary);
@@ -56,23 +102,47 @@ const Summery = ({ data }: SummeryProps) => {
                   </div>
 
                   {!isEditingTitle ? (
-                    <button
-                      type="button"
-                      className="btn border-0 btn-sm d-flex text-white align-items-center gap-1"
-                      onClick={() => setIsEditingTitle(true)}
-                    >
-                      <i className="bi bi-pencil"></i>
-                      <span>Edit</span>
-                    </button>
+                    <div className="d-flex gap-2">
+                      <button
+                        type="button"
+                        className="btn border-0 btn-sm d-flex text-white align-items-center gap-1"
+                        onClick={() => setIsEditingTitle(true)}
+                      >
+                        <i className="bi bi-pencil"></i>
+                        <span>Edit</span>
+                      </button>
+
+                      {/* 🔗 Button to go to /summery/:id */}
+                      {data.id && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-light btn-sm d-flex align-items-center gap-1"
+                          onClick={() => navigate(`/summery/${data.id}`)}
+                        >
+                          <i className="bi bi-box-arrow-up-right"></i>
+                          <span>Open Page</span>
+                        </button>
+                      )}
+                    </div>
                   ) : (
                     <div className="d-flex gap-2">
                       <button
                         type="button"
                         className="btn btn-success btn-sm d-flex align-items-center gap-1"
                         onClick={handleSaveTitle}
+                        disabled={isSavingTitle}
                       >
-                        <i className="bi bi-check-lg"></i>
-                        <span>Save</span>
+                        {isSavingTitle ? (
+                          <>
+                            <i className="bi bi-arrow-repeat spin"></i>
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-check-lg"></i>
+                            <span>Save</span>
+                          </>
+                        )}
                       </button>
                       <button
                         type="button"
@@ -80,7 +150,9 @@ const Summery = ({ data }: SummeryProps) => {
                         onClick={() => {
                           setEditableTitle(data.title || "");
                           setIsEditingTitle(false);
+                          setSaveError(null);
                         }}
+                        disabled={isSavingTitle}
                       >
                         <i className="bi bi-x-lg"></i>
                         <span>Cancel</span>
@@ -88,13 +160,17 @@ const Summery = ({ data }: SummeryProps) => {
                     </div>
                   )}
                 </div>
+
+                {saveError && (
+                  <p className="text-danger small mt-1 mb-0">{saveError}</p>
+                )}
               </div>
             )}
 
             <hr className="mt-3 mb-0" />
           </div>
 
-          {data?.transcriptSummary && (
+          {summaryObject && (
             <div className="mb-3">
               <button
                 id="summery-btn"
@@ -117,12 +193,14 @@ const Summery = ({ data }: SummeryProps) => {
                 id="summaryCollapse"
               >
                 <div className="card card-body transcript-box">
-                  <pre className="mb-0" style={{ whiteSpace: "pre-wrap" }}>
-                    {data?.transcriptSummary?.title}
-                  </pre>
+                  {summaryObject.title && (
+                    <pre className="mb-3" style={{ whiteSpace: "pre-wrap" }}>
+                      {summaryObject.title}
+                    </pre>
+                  )}
 
                   <div>
-                    {data?.transcriptSummary?.sections.map((ele, i) => (
+                    {summaryObject.sections?.map((ele, i) => (
                       <div key={i} className="mb-3">
                         <h5 className="extraBold">{ele.heading}</h5>
                         {ele.points.map((point: string, index: number) => (
@@ -170,7 +248,7 @@ const Summery = ({ data }: SummeryProps) => {
           <div className="d-flex align-items-center justify-content-center mt-4">
             <button
               className="btn choose-file-btn py-2 px-3 m-3 bold min-width"
-              onClick={() => navigate(`/summery/${data?.id}`)}
+              onClick={() => navigate(`/summery/${data.id}`)}
             >
               View Full Summary Page
             </button>
