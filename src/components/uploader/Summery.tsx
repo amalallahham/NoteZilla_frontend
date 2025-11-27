@@ -53,7 +53,7 @@ const Summery = ({ data }: SummeryProps) => {
       setIsSavingTitle(true);
       setSaveError(null);
 
-      const response = await fetch(`/api/summaries/${data.id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/videos/summaries/${data.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -65,8 +65,6 @@ const Summery = ({ data }: SummeryProps) => {
       if (!response.ok) {
         throw new Error("Failed to update title");
       }
-
-
       setIsEditingTitle(false);
     } catch (err: any) {
       console.error(err);

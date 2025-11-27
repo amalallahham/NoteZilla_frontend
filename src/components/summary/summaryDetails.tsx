@@ -77,9 +77,8 @@ const SummaryDetails: React.FC = () => {
     <div className="container mt-4">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
         <div>
-          <h2 className="mb-2 bold">
-            {summary.summary.title || summary.title}
-          </h2>
+          <h2 className="mb-2 bold">{summary.title}</h2>
+
           <small className="">
             Uploaded: {new Date(summary.createdAt).toLocaleString()}
           </small>
@@ -89,9 +88,12 @@ const SummaryDetails: React.FC = () => {
       <hr />
 
       <div className="row mt-3">
-        <div className="">
+        <div className="mb-4">
           <h4 className="mb-0 color-primary bold mb-2">Summary</h4>
         </div>
+
+        <h3>{summary.summary.title}</h3>
+
         <div className="col-lg-7 mb-4">
           <div className=" shadow-sm h-100">
             <div
