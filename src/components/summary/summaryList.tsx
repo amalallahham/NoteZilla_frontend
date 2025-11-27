@@ -25,44 +25,39 @@ const SummaryList: React.FC = () => {
 
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     const result = await Swal.fire({
-      title: 'Are you sure?',
+      title: "Are you sure?",
       text: "You won't be able to revert this!",
-      icon: 'warning',
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!'
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
     });
 
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/videos/summary/${id}`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/videos/summary/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to delete');
+          throw new Error("Failed to delete");
         }
 
-        setSummaries(summaries.filter(summary => summary.id !== id));
-        
-        Swal.fire(
-          'Deleted!',
-          'Your summary has been deleted.',
-          'success'
-        );
+        setSummaries(summaries.filter((summary) => summary.id !== id));
+
+        Swal.fire("Deleted!", "Your summary has been deleted.", "success");
       } catch (err) {
-        Swal.fire(
-          'Error!',
-          'Failed to delete the summary.',
-          'error'
-        );
+        Swal.fire("Error!", "Failed to delete the summary.", "error");
       }
     }
   };
@@ -80,9 +75,7 @@ const SummaryList: React.FC = () => {
           return res.json();
         })
         .then((data: any) => {
-          setSummaries(
-            data?.data.videos
-          );
+          setSummaries(data?.data.videos);
 
           setLoading(false);
         })
@@ -130,9 +123,7 @@ const SummaryList: React.FC = () => {
                   <i className="bi bi-trash"></i> Delete
                 </button>
                 <div className="card-body">
-                  <p className="bold font-size-16px">
-                    {summary.title}
-                  </p>
+                  <p className="bold font-size-16px">{summary.title}</p>
                   <small className="text-muted">
                     {new Date(summary.createdAt).toLocaleString()}
                   </small>
